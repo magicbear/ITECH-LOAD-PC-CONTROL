@@ -75,7 +75,7 @@ class SigSlot(QWidget):
         self.mode_cv.toggled.connect(lambda:self.on_mode_select(self.mode_cv))
         self.mode_cr = QRadioButton("CR")
         self.mode_cr.toggled.connect(lambda:self.on_mode_select(self.mode_cr))
-        self.mode_cp = QRadioButton("CP")
+        self.mode_cp = QRadioButton("CW")
         self.mode_cp.toggled.connect(lambda:self.on_mode_select(self.mode_cp))
         mode_selector.addWidget(self.mode_cc)
         mode_selector.addWidget(self.mode_cv)
@@ -281,7 +281,7 @@ class SigSlot(QWidget):
             self.cur_voltage = self.dev.GetCVVoltage()
             self.slider.setValue(float(self.cur_voltage) * div_val)
             self.pulse_enabled.setEnabled(False)
-        elif self.mode == "CP":
+        elif self.mode == "CW":
             max_var = self.dev.GetMaxPower()
             self.slider.setMaximum(max_var * div_val)
             self.slider.setSingleStep(max_var * div_val / 300)
@@ -318,7 +318,7 @@ class SigSlot(QWidget):
                 self.mode_cv.setChecked(True)
             elif mode == "CR":
                 self.mode_cr.setChecked(True)
-            elif mode == "CP":
+            elif mode == "CW":
                 self.mode_cp.setChecked(True)
 
             self.update_mode()
@@ -420,7 +420,7 @@ class SigSlot(QWidget):
     def on_mode_select(self,b):
         if b.isChecked() and not self.initalizing:
             print("Set MODE = %s  %d" % (b.text(), b.isChecked()))
-            self.get_cmd("SET_MODE_FN")(self,b.text())
+            self.dev.SetMode(b.text())
             self.mode = b.text()
             self.update_mode()
 
@@ -433,10 +433,10 @@ class SigSlot(QWidget):
             self.main_slider_value.setText("%.03f A" % (self.slider.value()/div_val))
         elif self.mode == "CV":
             self.main_slider_value.setText("%.04f V" % (self.slider.value()/div_val))
-        elif self.mode == "CP":
+        elif self.mode == "CW":
             self.main_slider_value.setText("%.04f W" % (self.slider.value()/div_val))
         elif self.mode == "CR":
-            self.main_slider_value.setText("%.04f Ω" % (1/(self.slider.value()/div_val) if (self.slider.value()/div_val) > 0 else 7500))
+            self.main_slider_value.setText("%.04f Ω" % (self.slider.value()/div_val))
 
     @pyqtSlot()
     def on_main_slider_valueChanged(self):
@@ -450,7 +450,7 @@ class SigSlot(QWidget):
             self.dev.SetCCCurrent(self.slider.value()/div_val)
         elif self.mode == "CV":
             self.dev.SetCVVoltage(self.slider.value()/div_val)
-        elif self.mode == "CP":
+        elif self.mode == "CW":
             self.dev.SetCWPower(self.slider.value()/div_val)
         elif self.mode == "CR":
             self.dev.SetCRResistance(self.slider.value()/div_val)
@@ -461,7 +461,7 @@ class SigSlot(QWidget):
                 try:
                     div_val = self.get_main_scale_div()
                     if self.mode == "CR" and float(self.main_slider_value.text()) * div_val > 0:
-                        self.slider.setValue(1/float(self.main_slider_value.text()) * div_val)
+                        self.slider.setValue(float(self.main_slider_value.text()) * div_val)
                     else:
                         self.slider.setValue(float(self.main_slider_value.text()) * div_val)
 
